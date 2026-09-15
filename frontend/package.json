@@ -27,6 +27,7 @@
     "name": "Cleanwell Mwalwanda",
     "email": "cleanwellmwalwanda@gmail.com"
   },
+  "homepage": "https://github.com/lionelmujuni/kuonix",
   "license": "MIT",
   "devDependencies": {
     "@electron/notarize": "^3.1.1",
