@@ -118,6 +118,7 @@ async function submit() {
   // Hide the empty-state placeholder once the conversation begins.
   if (placeholderEl && !placeholderEl.hidden) placeholderEl.hidden = true;
 
+  stream.closest(".agent-rail")?.classList.add("has-stream");
   appendUserMessage(text);
   promptInput.value = "";
   syncReadyState();

@@ -13,7 +13,14 @@ notebooks/
 coverage/
 
 #Ignore vscode AI rules
-.github\instructions\codacy.instructions.md
+.github/instructions/
+
+# Packaging: the backend jar is built fresh by Gradle, never committed
+frontend/kuonix.jar
+frontend/staging/
+frontend/release/
+frontend/.cache/
+release/
 
 # Local RAW troubleshooting samples
 restful/raw-samples/*

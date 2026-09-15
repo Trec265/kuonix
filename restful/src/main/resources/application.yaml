@@ -1,5 +1,7 @@
 server:
   port: 8081
+  # Single-user desktop backend: loopback only, never reachable from the network.
+  address: 127.0.0.1
 
 # ---------------------------------------------------------------------------
 # LangChain4j AI assistant (configured via Settings UI)

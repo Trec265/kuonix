@@ -136,7 +136,7 @@ export function mount(outlet) {
   ctx = enterView(outlet);
 
   if (!isReduced) {
-    gsap.from([...view.querySelectorAll(".help-card")], {
+    gsap.from([...view.querySelectorAll(".help__section")], {
       opacity: 0, y: 12, duration: 0.4, ease: "expo.out",
       stagger: { each: 0.05, from: "start" }, clearProps: "all",
     });
@@ -153,275 +153,502 @@ export function unmount() {
 
 function template() {
   return `
-    <header class="view-header">
-      <p class="eyebrow">Help</p>
-      <h1 class="display-heading">Conversational darkroom</h1>
-      <p class="muted help__subtitle">
-        Drop an image. Tell the agent what you want. Accept the result.
-        That's the loop — no sliders required.
-      </p>
+    <header class="view-header help__header">
+      <div>
+        <p class="eyebrow">Help</p>
+        <h1 class="display-heading">Conversational darkroom</h1>
+        <p class="muted help__subtitle">
+          Drop an image. Tell the agent what you want. Accept the result.
+          That's the loop — no sliders required.
+        </p>
+      </div>
     </header>
 
-    <div class="help__grid reveal">
+    <div class="help__content reveal">
 
-      <section class="help-card help-card--quick">
-        <h3 class="help-card__title"><i class="bi bi-rocket-takeoff"></i> Quick start</h3>
+      <section class="help__section" data-section="quickstart">
+        <header class="help__section-head">
+          <h2 class="help__section-title"><i class="bi bi-rocket-takeoff"></i> Quick start</h2>
+        </header>
+
         <ol class="help__steps">
-          <li>
-            <strong>Drop or browse</strong> — JPEG, PNG, TIFF, BMP, WEBP, or RAW
-            (CR2/3, NEF, ARW, DNG, RAF, ORF). Kuonix decodes RAW automatically.
+          <li class="help__step stack-row">
+            <span class="help__step-num">01</span>
+            <div class="help__step-body">
+              <strong class="help__step-title">Drop or browse</strong>
+              <p class="muted help__step-desc">JPEG, PNG, TIFF, BMP, WEBP, or RAW (CR2/3, NEF, ARW, DNG, RAF, ORF). Kuonix decodes RAW automatically.</p>
+            </div>
           </li>
-          <li>
-            <strong>Wait for analysis</strong> — the ribbon shows detected issues
-            (cool cast, oversaturation, blown highlights…) within a second or two.
+          <li class="help__step stack-row">
+            <span class="help__step-num">02</span>
+            <div class="help__step-body">
+              <strong class="help__step-title">Wait for analysis</strong>
+              <p class="muted help__step-desc">The ribbon shows detected issues (cool cast, oversaturation, blown highlights…) within a second or two.</p>
+            </div>
           </li>
-          <li>
-            <strong>Prompt the agent</strong> — plain English in the bottom rail.
-            See examples in the next section.
+          <li class="help__step stack-row">
+            <span class="help__step-num">03</span>
+            <div class="help__step-body">
+              <strong class="help__step-title">Prompt the agent</strong>
+              <p class="muted help__step-desc">Plain English in the bottom rail. See prompt examples below.</p>
+            </div>
           </li>
-          <li>
-            <strong>Preview → Accept</strong> — a preview card appears in the rail.
-            Accept commits the correction; subsequent prompts chain on top.
+          <li class="help__step stack-row">
+            <span class="help__step-num">04</span>
+            <div class="help__step-body">
+              <strong class="help__step-title">Preview → Accept</strong>
+              <p class="muted help__step-desc">A preview card appears in the rail. Accept commits the correction; subsequent prompts chain on top.</p>
+            </div>
           </li>
-          <li>
-            <strong>Export</strong> — when the image is finished, the Export view
-            saves it to your workspace folder.
+          <li class="help__step stack-row">
+            <span class="help__step-num">05</span>
+            <div class="help__step-body">
+              <strong class="help__step-title">Export</strong>
+              <p class="muted help__step-desc">When finished, the Export view saves full-resolution corrected files to your workspace folder.</p>
+            </div>
           </li>
         </ol>
+
         <div class="help__modes">
-          <div class="help__mode">
-            <strong><i class="bi bi-image"></i> Single mode</strong>
-            <p>One image, full ribbon. The agent works on the active image; the histogram lives in the Adjust panel.</p>
+          <div class="help__mode stack-row">
+            <i class="bi bi-image help__mode-icon"></i>
+            <div>
+              <strong class="help__mode-title">Single mode</strong>
+              <p class="muted help__mode-desc">One image, full ribbon. The agent works on the active image; histogram lives in the Adjust panel.</p>
+            </div>
           </div>
-          <div class="help__mode">
-            <strong><i class="bi bi-images"></i> Batch mode</strong>
-            <p>Many images grouped by issue. Pick a subset, prompt once, the agent runs the same correction across the selection.</p>
+          <div class="help__mode stack-row">
+            <i class="bi bi-images help__mode-icon"></i>
+            <div>
+              <strong class="help__mode-title">Batch mode</strong>
+              <p class="muted help__mode-desc">Many images grouped by issue. Pick a subset, prompt once, the agent runs across the selection.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="help-card">
-        <h3 class="help-card__title"><i class="bi bi-chat-quote"></i> Prompt cookbook</h3>
-        <p class="muted help-card__hint">Copy any of these into the rail. They work on real images and are tuned for the agent's tool vocabulary.</p>
-        <div class="help__prompts">
-          ${PROMPTS.map(p => `
-            <button class="help-prompt" data-prompt="${escapeAttr(p.text)}">
-              <span class="help-prompt__bucket">${p.bucket}</span>
-              <strong>${p.title}</strong>
-              <span class="help-prompt__text">"${p.text}"</span>
-              <i class="bi bi-clipboard help-prompt__copy"></i>
-            </button>
-          `).join("")}
-        </div>
-      </section>
+      <div class="help__columns">
+        <section class="help__section" data-section="cookbook">
+          <header class="help__section-head">
+            <h2 class="help__section-title"><i class="bi bi-chat-quote"></i> Prompt cookbook</h2>
+            <p class="muted help__section-hint">Tuned for the agent's vocabulary. Click any prompt to copy.</p>
+          </header>
 
-      <section class="help-card">
-        <h3 class="help-card__title"><i class="bi bi-tools"></i> What the agent can call</h3>
-        <p class="muted help-card__hint">
-          Eight tools wrap the backend. The agent picks which to call; you see each one
-          appear as a card in the agent rail as it runs.
-        </p>
-        <ul class="help__tools">
-          ${TOOLS.map(t => `
-            <li class="help-tool">
-              <span class="help-tool__icon"><i class="bi ${t.icon}"></i></span>
-              <div>
-                <code class="help-tool__name">${t.name}</code>
-                <p class="help-tool__summary">${t.summary}</p>
-                <p class="help-tool__detail muted">${t.detail}</p>
-              </div>
-            </li>
-          `).join("")}
-        </ul>
-      </section>
+          <div class="help__prompts">
+            ${PROMPTS.map(p => `
+              <button class="help-prompt stack-row" data-prompt="${escapeAttr(p.text)}">
+                <span class="help-prompt__bucket">${p.bucket}</span>
+                <div class="help-prompt__body">
+                  <strong class="help-prompt__title">${p.title}</strong>
+                  <span class="muted help-prompt__text">"${p.text}"</span>
+                </div>
+                <i class="bi bi-clipboard help-prompt__copy"></i>
+              </button>
+            `).join("")}
+          </div>
+        </section>
 
-      <section class="help-card">
-        <h3 class="help-card__title"><i class="bi bi-keyboard"></i> Keyboard shortcuts</h3>
+        <section class="help__section" data-section="tools">
+          <header class="help__section-head">
+            <h2 class="help__section-title"><i class="bi bi-tools"></i> What the agent can call</h2>
+            <p class="muted help__section-hint">Eight tools wrap backend image processing routines.</p>
+          </header>
+
+          <ul class="help__tools">
+            ${TOOLS.map(t => `
+              <li class="help-tool stack-row">
+                <i class="bi ${t.icon} help-tool__icon"></i>
+                <div class="help-tool__body">
+                  <div class="help-tool__header">
+                    <code class="help-tool__name">${t.name}</code>
+                  </div>
+                  <p class="help-tool__summary">${t.summary}</p>
+                  <p class="muted help-tool__detail">${t.detail}</p>
+                </div>
+              </li>
+            `).join("")}
+          </ul>
+        </section>
+      </div>
+
+      <section class="help__section" data-section="shortcuts">
+        <header class="help__section-head">
+          <h2 class="help__section-title"><i class="bi bi-keyboard"></i> Keyboard shortcuts</h2>
+        </header>
+
         <ul class="help__shortcuts">
           ${SHORTCUTS.map(s => `
-            <li class="help-shortcut">
+            <li class="help-shortcut stack-row">
               <span class="help-shortcut__keys">
                 ${s.keys.map(k => `<kbd>${k}</kbd>`).join('<span class="plus">+</span>')}
               </span>
-              <span class="help-shortcut__desc">${s.desc}</span>
+              <span class="muted help-shortcut__desc">${s.desc}</span>
             </li>
           `).join("")}
         </ul>
       </section>
 
-      <section class="help-card help-card--troubleshoot">
-        <h3 class="help-card__title"><i class="bi bi-life-preserver"></i> Troubleshooting</h3>
-        <details>
-          <summary>Agent says "AI is disabled"</summary>
-          <p>Open <a href="#/settings">Settings → AI</a>, toggle Ollama on, paste your key, save, and restart Kuonix.</p>
-        </details>
-        <details>
-          <summary>RAW won't decode</summary>
-          <p>Kuonix bundles LibRaw/dcraw binaries for Win, macOS, and Linux. If your camera's RAW format isn't listed in the dropzone subtitle, let us know — most can be added in a few minutes.</p>
-        </details>
-        <details>
-          <summary>"Could not fetch image" right after upload</summary>
-          <p>Backend at <code>localhost:8081</code> may have crashed. Check the dev console for a stack trace, then relaunch.</p>
-        </details>
-        <details>
-          <summary>Agent picks the wrong correction</summary>
-          <p>Be specific — name the algorithm ("use shades of gray", "apply vibrance") or the symptom ("the reds are crushed"). The agent will defer to explicit instructions.</p>
-        </details>
+      <section class="help__section help__section--troubleshoot" data-section="troubleshoot">
+        <header class="help__section-head">
+          <h2 class="help__section-title"><i class="bi bi-life-preserver"></i> Troubleshooting</h2>
+        </header>
+
+        <div class="help__troubleshoot">
+          <details class="help-accordion stack-row">
+            <summary>Agent says "AI is disabled"</summary>
+            <p class="muted">Open <a href="#/settings">Settings → AI</a>, toggle Ollama on, paste your key, save, and restart Kuonix.</p>
+          </details>
+          <details class="help-accordion stack-row">
+            <summary>RAW won't decode</summary>
+            <p class="muted">Kuonix bundles LibRaw/dcraw binaries for Win, macOS, and Linux. If your camera's RAW format isn't listed in the dropzone subtitle, let us know — most can be added in a few minutes.</p>
+          </details>
+          <details class="help-accordion stack-row">
+            <summary>"Could not fetch image" right after upload</summary>
+            <p class="muted">Backend at <code>localhost:8081</code> may have crashed. Check the dev console for a stack trace, then relaunch.</p>
+          </details>
+          <details class="help-accordion stack-row">
+            <summary>Agent picks the wrong correction</summary>
+            <p class="muted">Be specific — name the algorithm ("use shades of gray", "apply vibrance") or the symptom ("the reds are crushed"). The agent will defer to explicit instructions.</p>
+          </details>
+        </div>
       </section>
 
     </div>
 
     <style>
-      .help-view { padding: 28px 32px 80px; max-width: 1080px; }
-      .help__subtitle { margin-top: 8px; max-width: 540px; }
+      .help-view {
+        padding: var(--space-32) var(--space-32) var(--space-48);
+      }
+      .help__header {
+        width: min(960px, calc(100% - var(--space-48)));
+        margin: 0 auto var(--space-24);
+      }
+      .help__subtitle { margin-top: 6px; }
 
-      .help__grid {
-        display: grid; gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      .help__content {
+        width: min(960px, calc(100% - var(--space-48)));
+        max-width: 960px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-32);
       }
-      .help-card--quick { grid-column: 1 / -1; }
-      .help-card--troubleshoot { grid-column: 1 / -1; }
 
-      .help-card {
-        background: var(--color-surface);
-        border: 1px solid var(--color-card-border);
-        border-radius: 16px; padding: 22px;
-        box-shadow: var(--shadow-sm);
+      .help__section {
+        padding: 0 0 var(--space-20);
+        border-bottom: 0.5px solid var(--color-border);
       }
-      .help-card__title {
-        margin: 0 0 12px; font-size: 16px; font-weight: 600;
-        display: flex; align-items: center; gap: 8px;
+      .help__section:last-child {
+        border-bottom: none;
       }
-      .help-card__title i { color: rgb(var(--accent-color-rgb)); }
-      .help-card__hint { margin: 0 0 16px; font-size: 13px; line-height: 1.5; }
+      .help__section-head {
+        margin-bottom: var(--space-12);
+      }
+      .help__section-title {
+        margin: 0 0 var(--space-4);
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-semibold);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--color-text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .help__section-title i {
+        color: var(--color-text-secondary);
+      }
+      .help__section-hint {
+        margin: 0;
+        font-size: 12px;
+      }
 
       .help__steps {
-        margin: 0 0 20px; padding-left: 24px;
-        font-size: 13px; line-height: 1.7; color: var(--color-text);
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--space-16);
+        display: flex;
+        flex-direction: column;
       }
-      .help__steps li { margin-bottom: 8px; }
-      .help__steps strong { color: rgb(var(--accent-color-rgb)); font-weight: 600; }
+      .help__step.stack-row {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        align-items: baseline;
+        gap: var(--space-12);
+        padding: var(--space-12) 0;
+        border-bottom: 0.5px solid var(--color-border);
+        margin: 0;
+      }
+      .help__step:last-child { border-bottom: none; }
+      .help__step-num {
+        font-family: var(--font-family-mono);
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+      }
+      .help__step-body { display: flex; flex-direction: column; gap: 2px; }
+      .help__step-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-text);
+      }
+      .help__step-desc {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.4;
+      }
 
       .help__modes {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-16);
+        margin-top: var(--space-12);
       }
-      @media (max-width: 600px) {
-        .help__modes { grid-template-columns: 1fr; }
+      .help__mode.stack-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: var(--space-12) 0;
+        border-bottom: none;
+        margin: 0;
       }
-      .help__mode {
-        padding: 14px; border-radius: 12px;
-        background: var(--color-secondary); border: 1px solid var(--color-border);
+      .help__mode-icon {
+        font-size: 18px;
+        color: var(--color-text-secondary);
+        margin-top: 1px;
       }
-      .help__mode strong {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 13px; margin-bottom: 4px;
-      }
-      .help__mode p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
-
-      .help__prompts { display: flex; flex-direction: column; gap: 8px; }
-      .help-prompt {
-        position: relative; text-align: left; cursor: pointer;
-        padding: 12px 14px; border-radius: 10px;
-        background: var(--color-secondary); border: 1px solid var(--color-border);
+      .help__mode-title {
+        font-size: 13px;
+        font-weight: 600;
         color: var(--color-text);
-        display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px;
+      }
+      .help__mode-desc {
+        margin: 2px 0 0;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .help__columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-32);
+      }
+      .help__columns .help__section {
+        border-bottom: none;
+        padding: 0;
+      }
+
+      .help__prompts {
+        display: flex;
+        flex-direction: column;
+      }
+      .help-prompt.stack-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        transition: background var(--duration-fast) var(--ease-standard),
-                    border-color var(--duration-fast) var(--ease-standard);
+        gap: 12px;
+        padding: var(--space-10) 0;
+        border-bottom: 0.5px solid var(--color-border);
+        background: transparent;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        text-align: left;
+        cursor: pointer;
+        color: var(--color-text);
+        margin: 0;
+        transition: background var(--duration-fast) var(--ease-standard);
       }
+      .help-prompt:last-child { border-bottom: none; }
       .help-prompt:hover {
-        background: var(--color-secondary-hover);
-        border-color: rgba(var(--accent-color-rgb), 0.5);
+        background: var(--color-secondary);
       }
-      .help-prompt strong { font-size: 13px; grid-column: 2; }
       .help-prompt__bucket {
-        grid-row: 1 / span 2; align-self: center;
-        font-size: 10px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.05em;
-        padding: 4px 8px; border-radius: 999px;
-        background: rgba(var(--accent-color-rgb), 0.12);
-        color: rgb(var(--accent-color-rgb));
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 2px 6px;
+        border-radius: var(--radius-sm);
+        background: var(--color-secondary);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+      }
+      .help-prompt__body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .help-prompt__title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text);
       }
       .help-prompt__text {
-        grid-column: 2; font-size: 12px; color: var(--color-text-secondary);
+        font-size: 11px;
         font-style: italic;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .help-prompt__copy {
-        grid-row: 1 / span 2; grid-column: 3;
-        align-self: center; opacity: 0;
-        transition: opacity var(--duration-fast) var(--ease-standard);
+        opacity: 0;
         color: var(--color-text-secondary);
+        font-size: 13px;
+        transition: opacity var(--duration-fast) var(--ease-standard);
       }
       .help-prompt:hover .help-prompt__copy { opacity: 1; }
       .help-prompt.is-copied .help-prompt__copy::before { content: "\\f26b"; color: #4caf50; }
 
-      .help__tools { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-      .help-tool {
-        display: grid; grid-template-columns: 36px 1fr; gap: 12px;
-        padding: 12px; border-radius: 10px;
-        background: var(--color-secondary); border: 1px solid var(--color-border);
+      .help__tools {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
       }
+      .help-tool.stack-row {
+        display: grid;
+        grid-template-columns: 24px 1fr;
+        align-items: baseline;
+        gap: 12px;
+        padding: var(--space-10) 0;
+        border-bottom: 0.5px solid var(--color-border);
+        margin: 0;
+      }
+      .help-tool:last-child { border-bottom: none; }
       .help-tool__icon {
-        width: 36px; height: 36px; border-radius: 9px;
-        background: rgba(var(--accent-color-rgb), 0.12);
-        color: rgb(var(--accent-color-rgb));
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px;
+        font-size: 14px;
+        color: var(--color-text-secondary);
+      }
+      .help-tool__body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
       }
       .help-tool__name {
-        font-size: 13px; font-weight: 600;
-        background: var(--color-background);
-        padding: 1px 8px; border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text);
         font-family: var(--font-family-mono, monospace);
+        background: var(--color-secondary);
+        padding: 1px 6px;
+        border-radius: 4px;
       }
-      .help-tool__summary { margin: 6px 0 4px; font-size: 13px; line-height: 1.4; }
-      .help-tool__detail { margin: 0; font-size: 12px; line-height: 1.5; }
+      .help-tool__summary {
+        margin: 2px 0 0;
+        font-size: 12px;
+        line-height: 1.35;
+        color: var(--color-text);
+      }
+      .help-tool__detail {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.35;
+      }
 
-      .help__shortcuts { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-      .help-shortcut {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 6px 0; border-bottom: 1px dashed var(--color-border);
-        font-size: 13px;
+      .help__shortcuts {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
       }
-      .help-shortcut:last-child { border-bottom: 0; }
-      .help-shortcut__keys { display: inline-flex; align-items: center; gap: 4px; }
-      .help-shortcut__keys .plus { color: var(--color-text-secondary); font-size: 11px; }
-      .help-shortcut__desc { color: var(--color-text-secondary); }
+      .help-shortcut.stack-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-8) 0;
+        border-bottom: 0.5px solid var(--color-border);
+        margin: 0;
+      }
+      .help-shortcut:last-child { border-bottom: none; }
+      .help-shortcut__keys {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .help-shortcut__keys .plus {
+        color: var(--color-text-secondary);
+        font-size: 10px;
+      }
+      .help-shortcut__desc {
+        font-size: 12px;
+      }
 
       kbd {
         font-family: var(--font-family-mono, monospace);
-        font-size: 11px; font-weight: 600;
-        padding: 2px 8px; border-radius: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
         background: var(--color-secondary);
         border: 1px solid var(--color-border);
-        border-bottom-width: 2px;
         color: var(--color-text);
       }
 
-      details {
-        padding: 10px 0; border-bottom: 1px solid var(--color-border);
+      .help__troubleshoot {
+        display: flex;
+        flex-direction: column;
       }
-      details:last-child { border-bottom: 0; }
+      details.help-accordion.stack-row {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--space-10) 0;
+        border-bottom: 0.5px solid var(--color-border);
+        margin: 0;
+      }
+      details.help-accordion:last-child { border-bottom: none; }
       summary {
-        font-size: 13px; font-weight: 500; cursor: pointer;
-        padding: 6px 0; list-style: none;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 2px 0;
+        list-style: none;
+        color: var(--color-text);
       }
       summary::-webkit-details-marker { display: none; }
       summary::before {
-        content: "›"; display: inline-block; width: 16px;
-        color: rgb(var(--accent-color-rgb)); font-weight: 700;
+        content: "›";
+        display: inline-block;
+        width: 14px;
+        color: var(--color-text-secondary);
+        font-weight: 700;
         transition: transform var(--duration-fast) var(--ease-standard);
       }
       details[open] summary::before { transform: rotate(90deg); }
       details p {
-        margin: 6px 0 8px 16px; font-size: 12px; line-height: 1.6;
-        color: var(--color-text-secondary);
+        margin: 6px 0 2px 14px;
+        font-size: 12px;
+        line-height: 1.5;
       }
       details p code {
-        background: var(--color-secondary); padding: 1px 6px; border-radius: 4px;
+        background: var(--color-secondary);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 11px;
       }
-      details a { color: rgb(var(--accent-color-rgb)); }
+      details a { color: var(--accent-color); }
+
+      @media (max-width: 900px) {
+        .help-view { padding-inline: var(--space-20); }
+        .help__header, .help__content { width: 100%; }
+        .help__columns {
+          grid-template-columns: 1fr;
+          gap: var(--space-24);
+        }
+        .help__columns .help__section {
+          border-bottom: 0.5px solid var(--color-border);
+          padding-bottom: var(--space-20);
+        }
+        .help__modes {
+          grid-template-columns: 1fr;
+          gap: var(--space-8);
+        }
+      }
     </style>
   `;
 }

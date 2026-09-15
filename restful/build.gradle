@@ -18,10 +18,29 @@ repositories {
 	mavenCentral()
 }
 
+// JavaCPP native classifier for the OS/arch the jar is built for. opencv-platform
+// pulls natives for every OS (android/ios/linux/macosx/windows, ~330 MB), so the
+// jar carries only one platform's natives instead. Installers are built per OS,
+// so this defaults to the build host; override with -PjavacppPlatform=macosx-x86_64 etc.
+def detectJavacppPlatform() {
+	def os = System.getProperty('os.name').toLowerCase()
+	def arch = System.getProperty('os.arch').toLowerCase()
+	def cpu = (arch == 'aarch64' || arch == 'arm64') ? 'arm64' : 'x86_64'
+	if (os.contains('win')) return "windows-${cpu}"
+	if (os.contains('mac')) return "macosx-${cpu}"
+	return "linux-${cpu}"
+}
+def javacppPlatform = project.findProperty('javacppPlatform') ?: detectJavacppPlatform()
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.bytedeco:opencv-platform:4.10.0-1.5.11'
+	implementation 'org.bytedeco:opencv:4.10.0-1.5.11'
+	implementation "org.bytedeco:opencv:4.10.0-1.5.11:${javacppPlatform}"
+	implementation 'org.bytedeco:openblas:0.3.28-1.5.11'
+	implementation "org.bytedeco:openblas:0.3.28-1.5.11:${javacppPlatform}"
+	implementation 'org.bytedeco:javacpp:1.5.11'
+	implementation "org.bytedeco:javacpp:1.5.11:${javacppPlatform}"
 	implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.10.1'
 	implementation 'commons-codec:commons-codec:1.16.0'
 	implementation 'com.drewnoakes:metadata-extractor:2.19.0'
@@ -35,6 +54,10 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
+}
+
+bootJar {
+	archiveFileName = 'kuonix.jar'
 }
 
 tasks.named('test') {

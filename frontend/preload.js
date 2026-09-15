@@ -36,6 +36,14 @@ contextBridge.exposeInMainWorld('dialog', {
   selectReferenceImage: () => ipcRenderer.invoke('select-reference-image')
 });
 
+// Backend address for this launch. main.js starts the backend on 8081, or on a
+// free port when 8081 is taken, and passes it via additionalArguments.
+const portArg = process.argv.find((arg) => arg.startsWith('--kuonix-backend-port='));
+const backendPort = Number(portArg?.split('=')[1]) || 8081;
+contextBridge.exposeInMainWorld('kuonixBackend', {
+  baseUrl: `http://127.0.0.1:${backendPort}`
+});
+
 // Open an http/https URL in the user's default browser, kept separate from the
 // app so a broken or closed page never affects Kuonix.
 contextBridge.exposeInMainWorld('shellOpen', {

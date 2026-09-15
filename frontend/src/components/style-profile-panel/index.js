@@ -6,6 +6,7 @@
 import * as state from "../../state.js";
 import { listProfiles, createProfile, deleteProfile, indexPortfolio, getStyleGap } from "../../api/endpoints/styleProfiles.js";
 import { toast } from "../toast/index.js";
+import { escapeHtml } from "../../utils/escape-html.js";
 
 const LS_KEY = "kuonix.styleProfilePanelOpen";
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.raw,.rw2,.srw,.pef";
@@ -154,7 +155,7 @@ export function createStyleProfilePanel() {
     const list = profiles.length
       ? `<div class="sp-profiles">${profiles.map(p => `
           <div class="sp-profile-row ${p.id === activeId ? "is-active" : ""}" data-profile-id="${p.id}">
-            <span class="sp-profile-row__name">${p.name}</span>
+            <span class="sp-profile-row__name">${escapeHtml(p.name)}</span>
             <button class="sp-profile-row__del" data-delete="${p.id}" title="Delete"><i class="bi bi-trash3"></i></button>
           </div>`).join("")}
         </div>`

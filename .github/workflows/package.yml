@@ -1,0 +1,170 @@
+name: Package Installers
+
+# Builds self-contained Kuonix installers (bundled trimmed JRE + backend jar +
+# native RAW decoder) on each OS, smoke-tests the packaged app with Java
+# scrubbed from the environment, and uploads the installers as artifacts.
+# Installers can't be cross-built: each runner builds its own OS/arch.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+    # Test builds from a branch (workflow_dispatch only works once this file
+    # is on the default branch).
+    branches: ['packaging/**']
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            target: win
+            arch: x64
+          - name: macOS x64
+            os: macos-15-intel
+            target: mac
+            arch: x64
+          - name: macOS arm64
+            os: macos-latest
+            target: mac
+            arch: arm64
+          # Oldest supported glibc baseline: the LibRaw decoder built here runs
+          # on this Ubuntu release and newer.
+          - name: Linux x64
+            os: ubuntu-22.04
+            target: linux
+            arch: x64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true  # gradle-wrapper.jar is stored in Git LFS
+
+      - name: Setup JDK 25 (Gradle build + jlink)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install LibRaw build prerequisites
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential zlib1g-dev
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Gradle bootJar for this platform's natives, jlink runtime, decoder;
+      # then boots the jar on the staged JRE with Java removed from PATH.
+      - name: Stage JRE, backend jar and native decoder
+        working-directory: frontend
+        run: node scripts/stage.mjs --verify
+
+      # Exports signing variables only when the corresponding secrets exist, so
+      # forks and credential-less runs produce unsigned builds instead of failing.
+      - name: Configure code signing (optional)
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          put() { if [ -n "$2" ]; then { echo "$1<<__KUONIX_EOF__"; echo "$2"; echo "__KUONIX_EOF__"; } >> "$GITHUB_ENV"; fi; }
+          if [ "$TARGET" = "mac" ]; then
+            if [ -n "$MAC_CSC_LINK" ]; then
+              put CSC_LINK "$MAC_CSC_LINK"
+              put CSC_KEY_PASSWORD "$MAC_CSC_KEY_PASSWORD"
+              echo "macOS: signing with Developer ID certificate"
+            else
+              echo "macOS: no certificate secret, building ad-hoc signed (unsigned) app"
+            fi
+            put APPLE_ID "$APPLE_ID"
+            put APPLE_APP_SPECIFIC_PASSWORD "$APPLE_APP_SPECIFIC_PASSWORD"
+            put APPLE_TEAM_ID "$APPLE_TEAM_ID"
+            if [ -n "$APPLE_API_KEY_P8" ]; then
+              key="$RUNNER_TEMP/apple-api-key.p8"
+              printf '%s' "$APPLE_API_KEY_P8" > "$key"
+              put APPLE_API_KEY "$key"
+              put APPLE_API_KEY_ID "$APPLE_API_KEY_ID"
+              put APPLE_API_ISSUER "$APPLE_API_ISSUER"
+            fi
+          elif [ "$TARGET" = "win" ]; then
+            if [ -n "$WIN_CSC_LINK" ]; then
+              put WIN_CSC_LINK "$WIN_CSC_LINK"
+              put WIN_CSC_KEY_PASSWORD "$WIN_CSC_KEY_PASSWORD"
+              echo "Windows: signing with code-signing certificate"
+            else
+              echo "Windows: no certificate secret, building unsigned installer"
+            fi
+          fi
+
+      - name: Build installer
+        working-directory: frontend
+        run: node scripts/dist.mjs ${{ matrix.target }} --arch=${{ matrix.arch }} --skip-stage
+
+      # Optional: set the repository variable SMOKE_RAW_URL to a RAW file (e.g.
+      # a CC0 DNG) to include a real decode through the bundled dcraw_emu.
+      - name: Fetch RAW sample for decode check
+        if: vars.SMOKE_RAW_URL != ''
+        shell: bash
+        run: |
+          curl -fsSL "${{ vars.SMOKE_RAW_URL }}" -o "$RUNNER_TEMP/smoke-sample.raw"
+          echo "KUONIX_SMOKE_RAW=$RUNNER_TEMP/smoke-sample.raw" >> "$GITHUB_ENV"
+
+      - name: Smoke-test packaged app without Java (Windows/macOS)
+        if: matrix.target != 'linux'
+        working-directory: frontend
+        run: node scripts/smoke-packaged.mjs
+
+      # Fresh Ubuntu container with no Java and no dev tools: install the .deb
+      # through apt, launch under Xvfb, run the same acceptance checks.
+      - name: Clean-container test of the .deb (Linux)
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          raw_mount=()
+          if [ -n "${KUONIX_SMOKE_RAW:-}" ]; then
+            raw_mount=(-v "$KUONIX_SMOKE_RAW:/tmp/smoke-sample.raw:ro" -e KUONIX_SMOKE_RAW=/tmp/smoke-sample.raw)
+          fi
+          node_root="$(dirname "$(dirname "$(command -v node)")")"
+          docker run --rm -v "$PWD:/work" -v "$node_root:/opt/node:ro" "${raw_mount[@]}" ubuntu:24.04 \
+            bash /work/frontend/scripts/smoke-linux-container.sh
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuonix-${{ matrix.target }}-${{ matrix.arch }}
+          path: |
+            frontend/release/*.exe
+            frontend/release/*.dmg
+            frontend/release/*.zip
+            frontend/release/*.AppImage
+            frontend/release/*.deb
+          if-no-files-found: error

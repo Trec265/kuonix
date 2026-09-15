@@ -1,0 +1,102 @@
+# Kuonix installers. Each platform is built on its own OS (see
+# .github/workflows/package.yml or `npm run dist:<os>`), after
+# `scripts/stage.mjs` has populated staging/ for that OS/arch.
+appId: com.kuonix.app
+productName: Kuonix
+copyright: Copyright © 2026 Cleanwell Mwalwanda
+
+directories:
+  output: release
+  buildResources: build
+
+# App code only. Production node_modules (gsap, tree-kill, sudo-prompt) are
+# added by electron-builder; devDependencies never are.
+files:
+  - package.json
+  - main.js
+  - preload.js
+  - splash.html
+  - splash.js
+  - index-next.html
+  - src/**
+  - assets/**
+  - "!**/*.test.js"
+  - "!src/**/__tests__/**"
+
+# Runtime pieces that must be real files on disk (Java can't read a jar from
+# inside app.asar, and the OS can't exec binaries from it). They land in
+# Contents/Resources (macOS) or resources/ (Windows/Linux); main.js resolves
+# them from process.resourcesPath.
+extraResources:
+  - from: staging/jre
+    to: jre
+  - from: staging/backend
+    to: backend
+  - from: staging/bin
+    to: bin
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  # Signing is automatic when WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD (or CSC_LINK/
+  # CSC_KEY_PASSWORD) are set, and skipped otherwise.
+
+nsis:
+  oneClick: true
+  perMachine: false
+  artifactName: ${productName}-Setup-${version}-${arch}.${ext}
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.photography
+  icon: build/icon.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # Notarization runs from the afterSign hook below, only when credentials exist.
+  notarize: false
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+afterSign: scripts/notarize.cjs
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+  category: Graphics
+  icon: build/icon.png
+  executableName: kuonix
+  synopsis: RAW image processor with batch correction and AI-assisted color
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+deb:
+  # electron-builder's defaults omit libgbm1/libasound2, which Electron needs
+  # to start; zlib1g is the bundled dcraw_emu's only non-glibc dependency.
+  # "| ...t64" alternatives cover Ubuntu 24.04+ package renames.
+  depends:
+    - libgtk-3-0 | libgtk-3-0t64
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0 | libatspi2.0-0t64
+    - libuuid1
+    - libsecret-1-0
+    - libgbm1
+    - libasound2 | libasound2t64
+    - zlib1g
+
+publish: null

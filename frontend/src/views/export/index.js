@@ -16,6 +16,7 @@ import * as state from "../../state.js";
 import { navigate } from "../../router.js";
 import { toast } from "../../components/toast/index.js";
 import { exportImage } from "../../api/endpoints/correction.js";
+import { escapeHtml } from "../../utils/escape-html.js";
 
 let ctx = null;
 let unsubs = [];
@@ -56,7 +57,7 @@ export function unmount() {
 
 function template() {
   return `
-    <header class="view-header">
+    <header class="view-header export__header">
       <div>
         <p class="eyebrow">Export</p>
         <h1 class="display-heading">Send your work</h1>
@@ -68,7 +69,7 @@ function template() {
       <section class="export__panel" data-panel="settings">
         <h3 class="export__panel-title"><i class="bi bi-gear"></i> Settings</h3>
 
-        <label class="export__field">
+        <label class="export__field stack-row">
           <span>Target</span>
           <select data-field="target">
             <option value="workspace" selected>Workspace folder (~/Kuonix)</option>
@@ -76,13 +77,13 @@ function template() {
           </select>
         </label>
 
-        <div class="export__folder-path" data-folder-path hidden>
+        <div class="export__folder-path stack-row" data-folder-path hidden>
           <i class="bi bi-folder2-open"></i>
           <span data-folder-label>No folder selected</span>
           <button class="export__folder-change" data-action="change-folder">Change</button>
         </div>
 
-        <label class="export__field">
+        <label class="export__field stack-row">
           <span>Format</span>
           <select data-field="format">
             <option value="jpg" selected>JPEG (.jpg)</option>
@@ -91,12 +92,12 @@ function template() {
           </select>
         </label>
 
-        <label class="export__field" data-quality-field>
+        <label class="export__field stack-row" data-quality-field>
           <span>JPEG Quality &mdash; <span data-quality-value>95</span></span>
           <input type="range" min="1" max="100" value="95" step="1" data-field="quality" class="export__slider">
         </label>
 
-        <label class="export__field">
+        <label class="export__field stack-row">
           <span>Naming</span>
           <select data-field="naming">
             <option value="suffix" selected>Original + algorithm suffix</option>
@@ -105,7 +106,7 @@ function template() {
           </select>
         </label>
 
-        <div class="export__hint">
+        <div class="export__hint stack-row">
           <i class="bi bi-info-circle"></i>
           Each export re-encodes the latest committed baseline for the selected format.
           Re-exporting the same image is safe — existing files are overwritten only if
@@ -114,7 +115,7 @@ function template() {
       </section>
 
       <section class="export__panel" data-panel="queue">
-        <header class="export__panel-head">
+        <header class="export__panel-head stack-row">
           <h3 class="export__panel-title"><i class="bi bi-collection-play"></i> Queue</h3>
           <div class="export__queue-actions">
             <button class="btn btn--ghost" data-action="select-all">
@@ -136,31 +137,33 @@ function template() {
     </div>
 
     <style>
-      .export-view { padding: 28px 32px 80px; }
-      .view-header { margin-bottom: 24px; }
+      .export-view { padding: var(--space-32) var(--space-32) var(--space-48); }
+      .export__header {
+        width: min(960px, calc(100% - var(--space-48)));
+        margin: 0 auto var(--space-24);
+      }
       .export__subtitle { margin-top: 6px; }
 
       .export__grid {
-        display: grid;
-        grid-template-columns: minmax(280px, 360px) 1fr;
-        gap: 20px;
-      }
-      @media (max-width: 900px) {
-        .export__grid { grid-template-columns: 1fr; }
+        display: flex;
+        flex-direction: column;
+        width: min(960px, calc(100% - var(--space-48)));
+        max-width: 960px;
+        margin: 0 auto;
+        gap: var(--space-32);
       }
 
       .export__panel {
-        background: var(--color-surface);
-        border: 1px solid var(--color-card-border);
-        border-radius: 16px; padding: 20px;
-        box-shadow: var(--shadow-sm);
+        padding: 0 0 var(--space-24);
+        border-bottom: 0.5px solid var(--color-border);
       }
       .export__panel-head {
         display: flex; justify-content: space-between; align-items: center;
-        gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+        gap: var(--space-16); margin-bottom: var(--space-12); flex-wrap: wrap;
+        padding-top: var(--space-8);
       }
       .export__panel-title {
-        margin: 0 0 14px; font-size: 14px; letter-spacing: 0.02em;
+        margin: 0; font-size: var(--font-size-lg); letter-spacing: 0.02em;
         text-transform: uppercase; color: var(--color-text-secondary);
         display: flex; align-items: center; gap: 8px;
       }
@@ -168,12 +171,14 @@ function template() {
       .export__queue-actions { display: flex; gap: 8px; }
 
       .export__field {
-        display: block; margin-bottom: 14px;
+        display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 1.6fr);
+        margin-bottom: 0;
+        max-width: 620px;
       }
       .export__field span {
         display: block; font-size: 12px; font-weight: 600;
         text-transform: uppercase; letter-spacing: 0.05em;
-        color: var(--color-text-secondary); margin-bottom: 6px;
+        color: var(--color-text-secondary); margin-bottom: 0;
       }
       .export__field select {
         width: 100%; padding: 8px 12px; border-radius: 10px;
@@ -197,9 +202,9 @@ function template() {
       }
 
       .export__hint {
-        margin-top: 16px; padding: 12px; border-radius: 10px;
+        max-width: 620px;
+        margin-top: var(--space-16); padding: var(--space-12) 0;
         background: rgba(var(--accent-color-rgb), 0.08);
-        border: 1px solid rgba(var(--accent-color-rgb), 0.2);
         font-size: 12px; line-height: 1.5; color: var(--color-text);
       }
       .export__hint i { color: rgb(var(--accent-color-rgb)); margin-right: 6px; }
@@ -210,13 +215,13 @@ function template() {
 
       .export__list {
         display: flex; flex-direction: column; gap: 8px;
-        max-height: 480px; overflow-y: auto; padding-right: 4px;
+        max-height: 520px; overflow-y: auto; padding-right: 4px;
       }
       .export-row {
         display: grid;
         grid-template-columns: 24px 56px 1fr auto auto;
         align-items: center; gap: 12px;
-        padding: 10px; border-radius: 10px;
+        padding: var(--space-10) 0; border-radius: 0;
         background: var(--color-secondary); border: 1px solid transparent;
         transition: border-color var(--duration-fast) var(--ease-standard);
       }
@@ -252,7 +257,7 @@ function template() {
       }
       .export-row__state.is-ready    { background: rgba(76,175,80,0.18);  color: #4caf50; }
       .export-row__state.is-busy     { background: rgba(33,128,141,0.18); color: var(--accent-color); }
-      .export-row__state.is-done     { background: rgba(76,175,80,0.85);  color: #fff; }
+      .export-row__state.is-done     { background: rgba(76,175,80,0.85);  color: var(--color-surface); }
       .export-row__state.is-failed   { background: rgba(227,87,71,0.18);  color: #e35747; }
       .export-row__state.is-skipped  { background: rgba(150,150,150,0.18); color: var(--color-text-secondary); }
       .export-row__action { color: var(--color-text-secondary); font-size: 16px; }
@@ -273,6 +278,34 @@ function template() {
       }
       .export__progress-text {
         margin-top: 6px; font-size: 12px; color: var(--color-text-secondary);
+      }
+
+      @media (max-width: 720px) {
+        .export-view { padding-inline: var(--space-20); }
+        .export__header,
+        .export__grid {
+          width: 100%;
+        }
+        .export__field {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-6);
+        }
+        .export__field span { margin-bottom: 0; }
+        .export__queue-actions {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-8);
+        }
+        .export__queue-actions .btn { flex: 1 1 160px; }
+        .export-row {
+          grid-template-columns: 24px 48px minmax(0, 1fr) auto;
+          gap: var(--space-8);
+        }
+        .export-row__thumb { width: 48px; height: 48px; }
+        .export-row__action { display: none; }
       }
     </style>
   `;
@@ -384,16 +417,18 @@ function render(view) {
 }
 
 function rowHtml(img, format) {
+  const path = String(img.path || "");
+  const name = String(img.name || path.split(/[\\/]/).pop() || "");
   const thumb = img.url
-    ? `<img src="${img.url}" alt="${img.name || ""}">`
+    ? `<img src="${escapeHtml(img.url)}" alt="${escapeHtml(name)}">`
     : `<i class="bi bi-image"></i>`;
   const fmtLabel = format === "png" ? "PNG" : format === "tiff" ? "TIFF" : "JPEG";
   return `
-    <div class="export-row ${img.selected ? "is-selected" : ""}" data-path="${img.path}">
+    <div class="export-row ${img.selected ? "is-selected" : ""}" data-path="${escapeHtml(path)}">
       <div class="export-row__check"><i class="bi bi-check"></i></div>
       <div class="export-row__thumb">${thumb}</div>
       <div class="export-row__meta">
-        <div class="export-row__name">${img.name || img.path.split(/[\\/]/).pop()}</div>
+        <div class="export-row__name">${escapeHtml(name)}</div>
         <div class="export-row__sub">${(img.issues || []).length} issue${(img.issues || []).length === 1 ? "" : "s"} · ${fmtLabel}</div>
       </div>
       <span class="export-row__state is-ready">Ready</span>

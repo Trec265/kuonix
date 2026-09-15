@@ -131,7 +131,7 @@ function stepBody(step, intent, modules) {
       <h2>You're set up.</h2>
       <p class="ob-sub">Your chosen features are active. You can adjust them any time in <strong>Settings → Features</strong>.</p>
       <ul class="ob-summary">
-        ${Object.entries(modules).map(([key, on]) => {
+        ${Object.entries(modules).filter(([key]) => MODULE_LABELS[key]).map(([key, on]) => {
           const m = MODULE_LABELS[key];
           return `<li class="${on ? "is-on" : "is-off"}"><i class="bi ${on ? "bi-check-lg" : "bi-x-lg"}"></i> ${m.label}</li>`;
         }).join("")}

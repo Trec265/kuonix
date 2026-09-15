@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>Kuonix</title>
+  <link rel="stylesheet" href="src/styles/tokens.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+    body {
+      display: grid;
+      place-items: center;
+      background: var(--color-background);
+      color: var(--color-text);
+      font-family: var(--font-family-base);
+    }
+    .splash {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .splash__mark {
+      width: 160px;
+      height: 90px;
+      background: var(--color-primary);
+      -webkit-mask: url("assets/icons/logo-light.svg") center / contain no-repeat;
+      mask: url("assets/icons/logo-light.svg") center / contain no-repeat;
+    }
+    .splash__name {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .splash__status {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .splash__track {
+      position: relative;
+      width: 160px;
+      height: 2px;
+      overflow: hidden;
+      border-radius: var(--radius-full);
+      background: var(--color-secondary-active);
+    }
+    .splash__bar {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 40%;
+      border-radius: inherit;
+      background: var(--color-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="splash" role="status" aria-live="polite">
+    <div class="splash__mark" aria-hidden="true"></div>
+    <div class="splash__name">Kuonix</div>
+    <div class="splash__track" aria-hidden="true"><div class="splash__bar"></div></div>
+    <div class="splash__status">Starting image engine…</div>
+  </div>
+  <script type="module" src="splash.js"></script>
+</body>
+</html>

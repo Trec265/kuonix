@@ -1,7 +1,9 @@
-// fetch wrapper for the Java backend on localhost:8081.
+// fetch wrapper for the Java backend (loopback, port 8081 by default).
 // Backend is the only source of truth — no port 8080.
 
-export const BASE_URL = "http://localhost:8081";
+// preload.js exposes the port main.js started the backend on for this launch;
+// outside Electron (tests) the default applies.
+export const BASE_URL = globalThis.kuonixBackend?.baseUrl ?? "http://127.0.0.1:8081";
 
 export class ApiError extends Error {
   constructor(status, body) {

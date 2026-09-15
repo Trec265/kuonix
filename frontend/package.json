@@ -1,5 +1,6 @@
 {
-  "name": "Kuonix",
+  "name": "kuonix",
+  "productName": "Kuonix",
   "version": "1.0.0",
   "description": "Batch image correction and grouping tool with limited editing capablities",
   "main": "main.js",
@@ -8,7 +9,11 @@
     "dev": "electron . --enable-logging",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "stage": "node scripts/stage.mjs --verify",
+    "dist:win": "node scripts/dist.mjs win",
+    "dist:mac": "node scripts/dist.mjs mac",
+    "dist:linux": "node scripts/dist.mjs linux"
   },
   "keywords": [
     "image",
@@ -18,17 +23,21 @@
     "photo",
     "color"
   ],
-  "author": "",
+  "author": {
+    "name": "Cleanwell Mwalwanda",
+    "email": "cleanwellmwalwanda@gmail.com"
+  },
   "license": "MIT",
   "devDependencies": {
+    "@electron/notarize": "^3.1.1",
     "@vitest/coverage-v8": "^4.1.8",
     "canvas": "^3.2.3",
     "electron": "^42.3.3",
+    "electron-builder": "^26.15.3",
     "jsdom": "^26.1.0",
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "electron-sudo": "^4.0.12",
     "gsap": "^3.15.0",
     "sudo-prompt": "^9.2.1",
     "tree-kill": "^1.2.2"

@@ -36,6 +36,7 @@ function injectStyles() {
 // Displays camera, lens, ISO, aperture, shutter speed, focal length from image EXIF.
 
 import * as state from "../../state.js";
+import { escapeHtml } from "../../utils/escape-html.js";
 
 const LS_KEY = "kuonix.exifPanelOpen";
 
@@ -88,7 +89,7 @@ export function createExifPanel() {
 
     if (!rows.length) { grid.innerHTML = `<span class="exif-panel__empty">No EXIF data available.</span>`; return; }
     grid.innerHTML = rows.map(([label, value]) =>
-      `<span class="exif-panel__label">${label}</span><span class="exif-panel__value">${value}</span>`
+      `<span class="exif-panel__label">${escapeHtml(label)}</span><span class="exif-panel__value">${escapeHtml(value)}</span>`
     ).join("");
   }
 

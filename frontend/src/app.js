@@ -54,6 +54,48 @@ defineRoute("help",     () => import("./views/help/index.js"));
 
 function bindNav() {
   const nav = document.querySelector(".left-nav");
+  const appShell = document.querySelector(".app-shell");
+  const agentRail = document.querySelector(".agent-rail");
+  const assistantRoutes = new Set(["edit", "library"]);
+  const dockedRoutes = new Set(["library"]);
+  const modeRoutes = new Set(["edit"]);
+
+  const syncAssistantLayout = (route) => {
+    const visible = assistantRoutes.has(route);
+    const docked = dockedRoutes.has(route);
+    appShell?.classList.toggle("assistant-hidden", !visible);
+    appShell?.classList.toggle("assistant-docked", docked);
+    if (agentRail) {
+      agentRail.classList.toggle("is-collapsed", visible && (docked || state.get("agentRailCollapsed")));
+    }
+  };
+
+  const syncModeToggleVisibility = (route) => {
+    const toggle = document.querySelector(".mode-toggle");
+    if (!toggle) return;
+    const isVisible = modeRoutes.has(route);
+    toggle.hidden = !isVisible;
+    if (isVisible) {
+      requestAnimationFrame(() => {
+        const indicator = toggle.querySelector(".mode-toggle__indicator");
+        const mode = state.get("mode");
+        const active = toggle.querySelector(`.mode-toggle__option[data-mode="${mode}"]`);
+        moveModeIndicator(indicator, active);
+      });
+    }
+  };
+
+  const syncContext = () => {
+    const route = getCurrentRoute();
+    const batchVisible = route === "edit" && state.get("mode") === "batch" && state.get("images").length > 0;
+    const batchContext = nav.querySelector("[data-context='edit-batch']");
+    const libraryContext = nav.querySelector("[data-context='library']");
+    batchContext.hidden = !batchVisible;
+    libraryContext.hidden = route !== "library";
+    libraryContext.setAttribute("aria-hidden", String(route !== "library"));
+    batchContext.setAttribute("aria-hidden", String(!batchVisible));
+  };
+
   nav.querySelectorAll(".nav-btn[data-route]").forEach((btn) => {
     btn.addEventListener("click", () => {
       buttonPulse(btn);
@@ -64,7 +106,35 @@ function bindNav() {
     nav.querySelectorAll(".nav-btn").forEach((b) => {
       b.classList.toggle("is-active", b.dataset.route === e.detail.name);
     });
+    syncContext();
+    syncAssistantLayout(e.detail.name);
+    syncModeToggleVisibility(e.detail.name);
   });
+
+  nav.addEventListener("click", (e) => {
+    const action = e.target.closest("[data-context-action]")?.dataset.contextAction;
+    if (!action) return;
+    const images = state.get("images");
+    if (action === "select-all") state.selectAll(true);
+    if (action === "select-none") state.selectAll(false);
+    if (action === "clear-session" && images.length && confirm("Clear all images from this session?")) {
+      state.clearImages();
+    }
+    if (action === "open-in-edit") {
+      const selected = state.getSelectedPaths();
+      if (selected.length) {
+        state.setActiveByPath(selected[0]);
+        navigate("edit");
+      }
+    }
+  });
+
+  state.on("mode", syncContext);
+  state.on("images", syncContext);
+  state.on("agentRailCollapsed", () => syncAssistantLayout(getCurrentRoute()));
+  syncContext();
+  syncAssistantLayout(getCurrentRoute());
+  syncModeToggleVisibility(getCurrentRoute());
 }
 
 function bindModeToggle() {
